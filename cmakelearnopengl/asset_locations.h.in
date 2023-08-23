@@ -1,0 +1,5 @@
+#pragma once
+
+#define ASSETS_ROOT_DIR "@CMAKE_SOURCE_DIR@/cmakelearnopengl/assets/"
+#define SHADERS_ROOT_DIR "@CMAKE_SOURCE_DIR@/cmakelearnopengl/assets/shaders/"
+#define TEXTURES_ROOT_DIR "@CMAKE_SOURCE_DIR@/cmakelearnopengl/assets/textures/"
