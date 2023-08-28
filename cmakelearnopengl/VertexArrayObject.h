@@ -14,7 +14,7 @@ private:
 
 public:
 	~VertexArrayObject();
-	VertexArrayObject(float* Data, unsigned int size);
+	VertexArrayObject(std::vector<float> Data);
 
 	void AddAttribute(int size);
 

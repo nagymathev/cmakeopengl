@@ -4,6 +4,7 @@
 #include <iostream>
 #include <cmath>
 #include <string>
+#include <vector>
 
 #include "Shader.h"
 #include "stb_image.h"
@@ -168,7 +169,7 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
-    float vertices[] = {
+    std::vector<float> vertices = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
      0.5f,  0.5f, -0.5f,  1.0f, 1.0f,
@@ -212,7 +213,7 @@ int main()
     -0.5f,  0.5f, -0.5f,  0.0f, 1.0f
     };
 
-    VertexArrayObject vao(vertices, sizeof(vertices));
+    VertexArrayObject vao(vertices);
     vao.AddAttribute(3);
     vao.AddAttribute(2);
 

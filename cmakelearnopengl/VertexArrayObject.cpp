@@ -1,13 +1,13 @@
 #include "VertexArrayObject.h"
 
-VertexArrayObject::VertexArrayObject(float* Data, unsigned int size)
+VertexArrayObject::VertexArrayObject(std::vector<float> Data)
 {
 	glGenVertexArrays(1, &mRendererID);
 	glBindVertexArray(mRendererID);
 
 	glGenBuffers(1, &mVertexBufferID);
 	glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferID);
-	glBufferData(GL_ARRAY_BUFFER, size, Data, GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, sizeof(Data[0]) * Data.size(), Data.data(), GL_STATIC_DRAW);
 }
 
 VertexArrayObject::~VertexArrayObject()
