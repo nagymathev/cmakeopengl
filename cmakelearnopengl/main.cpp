@@ -23,6 +23,7 @@
 int windowHeight = 600;
 int windowWidth = 800;
 glm::mat4 projection;
+glm::mat4 model;
 
 glm::vec3 cameraPos(0.0f, 0.0f, 5.0f);
 glm::vec3 cameraFront(0.0f, 0.0f, -1.0f);
@@ -169,6 +170,9 @@ int main()
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
+    glEnable(GL_DEPTH_TEST);
+
+    // vertex data of a cube with texture coordinates
     std::vector<float> vertices = {
     -0.5f, -0.5f, -0.5f,  0.0f, 0.0f,
      0.5f, -0.5f, -0.5f,  1.0f, 0.0f,
@@ -217,9 +221,60 @@ int main()
     vao.AddAttribute(3);
     vao.AddAttribute(2);
 
-    glBindVertexArray(0);
+    std::vector<float> lightVertices = {
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
 
-    glEnable(GL_DEPTH_TEST);
+    -0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f, -0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+
+    -0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f, -0.5f,
+     0.5f, -0.5f,  0.5f,
+     0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f,  0.5f,
+    -0.5f, -0.5f, -0.5f,
+
+    -0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f, -0.5f,
+     0.5f,  0.5f,  0.5f,
+     0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f,  0.5f,
+    -0.5f,  0.5f, -0.5f
+    };
+    VertexArrayObject lightVao(lightVertices);
+    lightVao.AddAttribute(3);
+
+    glm::vec3 lightCoords(2.0f, 1.0f, -5.0f);
+
+    Shader lightShader("lighting.vert", "light.frag");
+    Shader lightingShader("lighting.vert", "lighting.frag");
+    lightingShader.use();
+    lightingShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+    lightingShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+    
 
     unsigned int texture1 = CreateTexture("grid.jpg");
     unsigned int texture2 = CreateTexture("awesomeface.png", GL_RGBA);
@@ -254,36 +309,57 @@ int main()
 		glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-		shader.use();
-        shader.setInt("texture1", 0);
-        shader.setInt("texture2", 1);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, texture1);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, texture2);
-
         projection = glm::perspective(glm::radians(camera.Zoom), (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
-        shader.setMat4("projection", projection);
-
         glm::mat4 view = camera.GetViewMatrix();
-        shader.setMat4("view", view);
+
+        // Light cube
+        // ----------
+        lightShader.use();
+        lightShader.setMat4("projection", projection);
+        lightShader.setMat4("view", view);
+
+        model = glm::mat4(1.0f);
+        model = glm::translate(model, lightCoords);
+        model = glm::scale(model, glm::vec3(0.2f));
+        lightShader.setMat4("model", model);
+        lightVao.Bind();
+        glDrawArrays(GL_TRIANGLES, 0, lightVertices.size());
+        // ----------
+
+
+#pragma region textured cubes
+		//shader.use();
+  //      shader.setInt("texture1", 0);
+  //      shader.setInt("texture2", 1);
+
+  //      glActiveTexture(GL_TEXTURE0);
+  //      glBindTexture(GL_TEXTURE_2D, texture1);
+  //      glActiveTexture(GL_TEXTURE1);
+  //      glBindTexture(GL_TEXTURE_2D, texture2);
+
+  //      shader.setMat4("projection", projection);
+  //      shader.setMat4("view", view);
+
+        lightingShader.use();
+        lightingShader.setMat4("projection", projection);
+        lightingShader.setMat4("view", view);
 
         vao.Bind();
-
         for (unsigned int i = 0; i < 10; i++)
         {
-            glm::mat4 model = glm::mat4(1.0f);
+            model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * (i + 1);
             if (i == 0 || i % 2)
                 model = glm::rotate(model, glm::radians(angle * currentFrame), glm::vec3(1.0f, 0.3f, 0.5f));
             else
                 model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            shader.setMat4("model", model);
+            //shader.setMat4("model", model);
+            lightingShader.setMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
+#pragma endregion
 
 		glBindVertexArray(0);
         glUseProgram(0);
