@@ -18,4 +18,11 @@ configure_file(asset_locations.h.in asset_locations.h)
 # TODO: Add tests and install targets if needed.
 target_include_directories(learnopengl PUBLIC "../include" "${CMAKE_BINARY_DIR}/cmakelearnopengl")
 target_link_directories(learnopengl PUBLIC "../lib")
-target_link_libraries(learnopengl PUBLIC glfw3 opengl32)
+
+target_link_libraries(learnopengl PUBLIC glfw3)
+if (${UNIX})
+  target_link_libraries(learnopengl PUBLIC GL wayland-client)
+endif ()
+if (${WIN32})
+  target_link_libraries(learnopengl PUBLIC opengl32)
+endif ()
