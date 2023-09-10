@@ -272,10 +272,19 @@ int main()
     Shader lightShader("lighting.vert", "light.frag");
     Shader lightingShader("lighting.vert", "lighting.frag");
     lightingShader.use();
-    lightingShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
-    lightingShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
+//    lightingShader.setVec3("objectColor", glm::vec3(1.0f, 0.5f, 0.31f));
+//    lightingShader.setVec3("lightColor", glm::vec3(1.0f, 1.0f, 1.0f));
     lightingShader.setVec3("lightPos", lightCoords);
-    
+
+    lightingShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
+    lightingShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
+    lightingShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    lightingShader.setFloat("material.shininess", 32.0f);
+
+    lightingShader.setVec3("light.ambient",  glm::vec3(0.2f, 0.2f, 0.2f));
+    lightingShader.setVec3("light.diffuse",  glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
+    lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
+
 
     unsigned int texture1 = CreateTexture("grid.jpg");
     unsigned int texture2 = CreateTexture("awesomeface.png", GL_RGBA);
@@ -297,7 +306,6 @@ int main()
 
 	while (!glfwWindowShouldClose(window))
 	{
-
         float currentFrame = glfwGetTime();
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
