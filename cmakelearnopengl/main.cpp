@@ -290,6 +290,7 @@ int main()
 //    unsigned int texture2 = CreateTexture("awesomeface.png", GL_RGBA);
     unsigned int containerTexture = CreateTexture("container2.png", GL_RGBA);
     unsigned int containerTextureSpecularMap = CreateTexture("container2_specular.png", GL_RGBA);
+    unsigned int emissionMap = CreateTexture("matrix.jpg");
 
     Shader shader("basic.vert", "basic.frag");
 
@@ -354,10 +355,13 @@ int main()
         lightingShader.use();
         lightingShader.setInt("material.diffuse", 0);
         lightingShader.setInt("material.specular", 1);
+        lightingShader.setInt("material.emission", 2);
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, containerTexture);
         glActiveTexture(GL_TEXTURE1);
         glBindTexture(GL_TEXTURE_2D, containerTextureSpecularMap);
+        glActiveTexture(GL_TEXTURE2);
+        glBindTexture(GL_TEXTURE_2D, emissionMap);
 
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);

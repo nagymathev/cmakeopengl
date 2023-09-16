@@ -4,6 +4,8 @@ struct Material {
 	sampler2D diffuse;
 	sampler2D specular;
 	float shininess;
+
+	sampler2D emission;
 };
 
 struct Light {
@@ -50,6 +52,6 @@ void main()
 	// ------
 
 	// Result
-	vec3 result = ambient + diffuse + specular;
+	vec3 result = ambient + diffuse + specular + vec3(texture(material.emission, TexCoords));
 	FragColor = vec4(result, 1.0);
 }
