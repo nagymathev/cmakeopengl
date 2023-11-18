@@ -64,7 +64,8 @@ unsigned int CreateTexture(const char* filename, GLenum format = GL_RGB) {
 
     int width, height, nrChannels;
     stbi_set_flip_vertically_on_load(true);
-    unsigned char* data = stbi_load((TEXTURES_ROOT_DIR + std::string(filename)).c_str(), &width, &height, &nrChannels, 0);
+    unsigned char* data = stbi_load((TEXTURES_ROOT_DIR + std::string(filename)).c_str(),
+                                    &width, &height, &nrChannels, 0);
     if (data)
     {
         glTexImage2D(GL_TEXTURE_2D, 0, GL_RGB, width, height, 0, format, GL_UNSIGNED_BYTE, data);
@@ -327,10 +328,21 @@ int main()
         // Light cube
         // ----------
         lightShader.use();
+
+        glm::vec3 lightColors {
+            sin(currentFrame) + 1,
+            sin(currentFrame * 2) + 1,
+            sin(currentFrame * 0.5) + 1
+        };
+        lightShader.setVec3("lightColor", lightColors);
+
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
 
         model = glm::mat4(1.0f);
+        lightCoords.x = sin(currentFrame * 2);
+        lightCoords.y = cos(currentFrame * 5);
+        lightCoords.z = sin(currentFrame) * 4 - 4;
         model = glm::translate(model, lightCoords);
         model = glm::scale(model, glm::vec3(0.2f));
         lightShader.setMat4("model", model);
@@ -356,6 +368,11 @@ int main()
         lightingShader.setInt("material.diffuse", 0);
         lightingShader.setInt("material.specular", 1);
         lightingShader.setInt("material.emission", 2);
+
+//        lightingShader.setVec3("light.ambient", lightColors *= 0.2);
+        lightingShader.setVec3("light.diffuse", lightColors *= 0.5);
+        lightingShader.setVec3("light.specular", lightColors);
+
         glActiveTexture(GL_TEXTURE0);
         glBindTexture(GL_TEXTURE_2D, containerTexture);
         glActiveTexture(GL_TEXTURE1);
@@ -366,6 +383,8 @@ int main()
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
         lightingShader.setVec3("viewPos", camera.Position);
+
+        lightingShader.setVec3("lightPos", lightCoords);
 
         vao.Bind();
         for (unsigned int i = 0; i < 10; i++)
