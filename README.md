@@ -1,0 +1,1 @@
+This repository is for me playing with opengl, and figuring stuff out.
