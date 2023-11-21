@@ -78,14 +78,34 @@ void Cube::update(float delta_time)
     vao.Bind();
     shader->use();
 
+    apply_transformations();
+    angle += delta_time * 5;
+
+    shader->setMat4("model", model);
+}
+
+void Cube::apply_transformations()
+{
     model = glm::mat4(1.f);
     model = glm::translate(model, position);
 
-    model = glm::rotate(model, glm::radians(angle * delta_time * 100),
-                            glm::vec3(0, 1.f, 0.f));
-    angle += 5.f;
+    model = glm::rotate(model, glm::radians(angle), rotation_angle);
+    model = glm::scale(model, scale);
+}
 
-    shader->setMat4("model", model);
+void Cube::set_position(glm::vec3 _position)
+{
+    position = _position;
+    apply_transformations();
+}
 
-    glDrawArrays(GL_TRIANGLES, 0, 36);
+void Cube::set_rotation(float _angle)
+{
+    angle = _angle;
+    apply_transformations();
+}
+
+void Cube::set_rotation_angle(glm::vec3 _direction)
+{
+    rotation_angle = _direction;
 }
