@@ -17,6 +17,8 @@
 #include "Camera.h"
 #include "VertexArrayObject.h"
 
+#include "Cube.hpp"
+
 #pragma region global variables
 
 // GLOBAL VARIABLES
@@ -174,7 +176,7 @@ int main()
     glEnable(GL_DEPTH_TEST);
 
     // vertex data of a cube with texture coordinates
-    std::vector<float> vertices = {
+    std::vector<float> cube_vertices = {
         // positions          // normals           // texture coords
         -0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  0.0f, 0.0f,
         0.5f, -0.5f, -0.5f,  0.0f,  0.0f, -1.0f,  1.0f, 0.0f,
@@ -219,60 +221,14 @@ int main()
         -0.5f,  0.5f, -0.5f,  0.0f,  1.0f,  0.0f,  0.0f, 1.0f
     };
 
-    VertexArrayObject vao(vertices);
-    vao.AddAttribute(3);
-    vao.AddAttribute(3);
-    vao.AddAttribute(2);
-
-    std::vector<float> lightVertices = {
-    -0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    -0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f, -0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-
-    -0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f, -0.5f,
-     0.5f, -0.5f,  0.5f,
-     0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f,  0.5f,
-    -0.5f, -0.5f, -0.5f,
-
-    -0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f, -0.5f,
-     0.5f,  0.5f,  0.5f,
-     0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f,  0.5f,
-    -0.5f,  0.5f, -0.5f
-    };
-    VertexArrayObject lightVao(lightVertices);
-    lightVao.AddAttribute(3);
+    VertexArrayObject cube_vao(cube_vertices);
+    cube_vao.AddAttribute(3);
+    cube_vao.AddAttribute(3);
+    cube_vao.AddAttribute(2);
 
     glm::vec3 lightCoords(2.0f, 1.0f, -5.0f);
-
     Shader lightShader("lighting.vert", "light.frag");
+
     Shader lightingShader("lighting.vert", "lighting.frag");
     lightingShader.use();
     lightingShader.setVec3("lightPos", lightCoords);
@@ -286,14 +242,9 @@ int main()
     lightingShader.setVec3("light.diffuse",  glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
     lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
 
-
-//    unsigned int texture1 = CreateTexture("grid.jpg");
-//    unsigned int texture2 = CreateTexture("awesomeface.png", GL_RGBA);
     unsigned int containerTexture = CreateTexture("container2.png", GL_RGBA);
     unsigned int containerTextureSpecularMap = CreateTexture("container2_specular.png", GL_RGBA);
     unsigned int emissionMap = CreateTexture("matrix.jpg");
-
-    Shader shader("basic.vert", "basic.frag");
 
     glm::vec3 cubePositions[] = {
     glm::vec3(0.0f,  0.0f,  0.0f),
@@ -307,6 +258,14 @@ int main()
     glm::vec3(1.5f,  0.2f, -1.5f),
     glm::vec3(-1.3f,  1.0f, -1.5f)
     };
+
+    Cube cube{ &lightingShader };
+
+    /*
+     * ------------------------------------------
+     *                  THE LOOP
+     * ------------------------------------------
+     */
 
 	while (!glfwWindowShouldClose(window))
 	{
@@ -322,11 +281,16 @@ int main()
 		glClearColor(0.15f, 0.15f, 0.15f, 1.0f);
 		glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-        projection = glm::perspective(glm::radians(camera.Zoom), (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
+        projection = glm::perspective(glm::radians(camera.Zoom),
+                                      (float)windowWidth / (float)windowHeight, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
 
-        // Light cube
-        // ----------
+
+        /*
+         * ---------------------------
+         *      The Light Cube
+         * ---------------------------
+         */
         lightShader.use();
 
         glm::vec3 lightColors {
@@ -346,23 +310,18 @@ int main()
         model = glm::translate(model, lightCoords);
         model = glm::scale(model, glm::vec3(0.2f));
         lightShader.setMat4("model", model);
-        lightVao.Bind();
-        glDrawArrays(GL_TRIANGLES, 0, lightVertices.size());
+
+        cube_vao.Bind();
+        glDrawArrays(GL_TRIANGLES, 0, 36);
         // ----------
 
 
 #pragma region textured cubes
-		//shader.use();
-  //      shader.setInt("texture1", 0);
-  //      shader.setInt("texture2", 1);
-
-  //      glActiveTexture(GL_TEXTURE0);
-  //      glBindTexture(GL_TEXTURE_2D, texture1);
-  //      glActiveTexture(GL_TEXTURE1);
-  //      glBindTexture(GL_TEXTURE_2D, texture2);
-
-  //      shader.setMat4("projection", projection);
-  //      shader.setMat4("view", view);
+        /*
+         * ------------------------------------
+         *          Rendering Cubes
+         * ------------------------------------
+         */
 
         lightingShader.use();
         lightingShader.setInt("material.diffuse", 0);
@@ -386,17 +345,22 @@ int main()
 
         lightingShader.setVec3("lightPos", lightCoords);
 
-        vao.Bind();
+        cube.position = glm::vec3( -5.f, 10.f, 5.f);
+        cube.update(deltaTime);
+
+        cube_vao.Bind();
         for (unsigned int i = 0; i < 10; i++)
         {
             model = glm::mat4(1.0f);
             model = glm::translate(model, cubePositions[i]);
             float angle = 20.0f * (i + 1);
             if (i == 0 || i % 2)
-                model = glm::rotate(model, glm::radians(angle * currentFrame), glm::vec3(1.0f, 0.3f, 0.5f));
+                model = glm::rotate(model, glm::radians(angle * currentFrame),
+                                    glm::vec3(1.0f, 0.3f, 0.5f));
             else
-                model = glm::rotate(model, glm::radians(angle), glm::vec3(1.0f, 0.3f, 0.5f));
-            //shader.setMat4("model", model);
+                model = glm::rotate(model, glm::radians(angle),
+                                    glm::vec3(1.0f, 0.3f, 0.5f));
+
             lightingShader.setMat4("model", model);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);

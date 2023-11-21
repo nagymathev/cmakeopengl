@@ -48,7 +48,7 @@ public:
             vertexCode = vShaderStream.str();
             fragmentCode = fShaderStream.str();
         }
-        catch(std::ifstream::failure e)
+        catch(std::ifstream::failure& e)
         {
             std::cout << "ERROR::SHADER::FILE_NOT_SUCCESSFULLY_READ: " << e.what() << std::endl;
         }
@@ -94,6 +94,7 @@ public:
         glDeleteShader(vertexShader);
         glDeleteShader(fragmentShader);
     }
+
     void use()
     {
         glUseProgram(ID);
