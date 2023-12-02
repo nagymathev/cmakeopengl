@@ -167,13 +167,17 @@ int main()
 	}
 
 	glViewport(0, 0, windowWidth, windowHeight);
-//    glfwSwapInterval(1);
+    glfwSwapInterval(1);
 	glfwSetWindowSizeCallback(window, framebuffer_size_callback);
     glfwSetInputMode(window, GLFW_CURSOR, GLFW_CURSOR_DISABLED);
     glfwSetCursorPosCallback(window, mouse_callback);
     glfwSetScrollCallback(window, scroll_callback);
 
     glEnable(GL_DEPTH_TEST);
+
+    unsigned int containerTexture = CreateTexture("container2.png", GL_RGBA);
+    unsigned int containerTextureSpecularMap = CreateTexture("container2_specular.png", GL_RGBA);
+    unsigned int emissionMap = CreateTexture("matrix.jpg");
 
     glm::vec3 lightCoords(2.0f, 1.0f, -5.0f);
     Shader lightShader("lighting.vert", "light.frag");
@@ -182,18 +186,20 @@ int main()
     lightingShader.use();
     lightingShader.setVec3("lightPos", lightCoords);
 
-    lightingShader.setVec3("material.ambient", glm::vec3(1.0f, 0.5f, 0.31f));
-    lightingShader.setVec3("material.diffuse", glm::vec3(1.0f, 0.5f, 0.31f));
-    lightingShader.setVec3("material.specular", glm::vec3(0.5f, 0.5f, 0.5f));
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, containerTexture);
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, containerTextureSpecularMap);
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, emissionMap);
+    lightingShader.setInt("material.diffuse", 0);
+    lightingShader.setInt("material.specular", 1);
+    lightingShader.setInt("material.emission", 2);
     lightingShader.setFloat("material.shininess", 32.0f);
 
     lightingShader.setVec3("light.ambient",  glm::vec3(0.2f, 0.2f, 0.2f));
     lightingShader.setVec3("light.diffuse",  glm::vec3(0.5f, 0.5f, 0.5f)); // darken diffuse light a bit
     lightingShader.setVec3("light.specular", glm::vec3(1.0f, 1.0f, 1.0f));
-
-    unsigned int containerTexture = CreateTexture("container2.png", GL_RGBA);
-    unsigned int containerTextureSpecularMap = CreateTexture("container2_specular.png", GL_RGBA);
-    unsigned int emissionMap = CreateTexture("matrix.jpg");
 
     std::vector<glm::vec3> cube_positions = {
     glm::vec3(0.0f,  0.0f,  0.0f),
@@ -211,6 +217,14 @@ int main()
     Cube directionalLight{ &lightShader };
     directionalLight.scale = glm::vec3(0.2f);
 
+    std::vector<Cube*> cubes;
+    for (auto pos : cube_positions)
+    {
+        auto* cube = new Cube{ &lightingShader };
+        cube->position = pos;
+        cubes.push_back(cube);
+    }
+
     /*
      * ------------------------------------------
      *                  THE LOOP
@@ -222,8 +236,6 @@ int main()
         auto currentFrame = static_cast<float>(glfwGetTime());
         delta_time = currentFrame - lastFrame;
         lastFrame = currentFrame;
-
-//        std::cout << delta_time << std::endl;
 
         camera.Zoom = clamp(camera.Zoom, 10.0f, 75.0f);
         mouseHeldTime = clamp(mouseHeldTime, 0.0f, 1.0f);
@@ -244,20 +256,18 @@ int main()
          * ---------------------------
          */
         lightShader.use();
-
         glm::vec3 lightColors {
             sin(currentFrame) + 1,
             sin(currentFrame * 2) + 1,
             sin(currentFrame * 0.5) + 1
         };
         lightShader.setVec3("lightColor", lightColors);
-
         lightShader.setMat4("projection", projection);
         lightShader.setMat4("view", view);
 
-        lightCoords.x = sin(currentFrame * 2);
-        lightCoords.y = cos(currentFrame * 5);
-        lightCoords.z = sin(currentFrame) * 4 - 4;
+//        lightCoords.x = sin(currentFrame * 2);
+//        lightCoords.y = cos(currentFrame * 5);
+//        lightCoords.z = sin(currentFrame) * 4 - 4;
 
         directionalLight.position = lightCoords;
         directionalLight.update(delta_time);
@@ -270,32 +280,20 @@ int main()
          */
 
         lightingShader.use();
-        lightingShader.setInt("material.diffuse", 0);
-        lightingShader.setInt("material.specular", 1);
-        lightingShader.setInt("material.emission", 2);
-
-//        lightingShader.setVec3("light.ambient", lightColors *= 0.2);
         lightingShader.setVec3("light.diffuse", lightColors *= 0.5);
         lightingShader.setVec3("light.specular", lightColors);
-
-        glActiveTexture(GL_TEXTURE0);
-        glBindTexture(GL_TEXTURE_2D, containerTexture);
-        glActiveTexture(GL_TEXTURE1);
-        glBindTexture(GL_TEXTURE_2D, containerTextureSpecularMap);
-        glActiveTexture(GL_TEXTURE2);
-        glBindTexture(GL_TEXTURE_2D, emissionMap);
-
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
         lightingShader.setVec3("viewPos", camera.Position);
-
         lightingShader.setVec3("lightPos", directionalLight.position);
 
-        for (auto pos : cube_positions)
+        for (int i = 0; i < cubes.size(); i++)
         {
-            Cube cube{ &lightingShader };
-            cube.position = pos;
-            cube.update(delta_time);
+            cubes[i]->update(delta_time);
+            cubes[i]->angle += i * delta_time;
+            cubes[i]->rotation_angle = glm::vec3(currentFrame * (i + 1),
+                                                 delta_time * currentFrame + (i * 5),
+                                                 sin(currentFrame) * (i + 1) * 50);
 
             glDrawArrays(GL_TRIANGLES, 0, 36);
         }
