@@ -184,7 +184,6 @@ int main()
 
     Shader lightingShader("lighting.vert", "lighting.frag");
     lightingShader.use();
-    lightingShader.setVec3("lightPos", lightCoords);
 
     glActiveTexture(GL_TEXTURE0);
     glBindTexture(GL_TEXTURE_2D, containerTexture);
@@ -283,12 +282,18 @@ int main()
          */
 
         lightingShader.use();
-        lightingShader.setVec3("light.diffuse", lightColors *= 0.5);
-        lightingShader.setVec3("light.specular", lightColors);
+//        lightingShader.setVec3("light.diffuse", lightColors *= 0.5);
+//        lightingShader.setVec3("light.specular", lightColors);
+//        lightingShader.setVec3("light.position", directionalLight.position);
+        lightingShader.setVec3("light.position",  camera.Position);
+        lightingShader.setVec3("light.direction", camera.Front);
+        lightingShader.setFloat("light.cutOff",   glm::cos(glm::radians(12.5f)));
+        lightingShader.setFloat("light.outerCutOff", glm::cos(glm::radians(17.5f)));
+
         lightingShader.setMat4("projection", projection);
         lightingShader.setMat4("view", view);
         lightingShader.setVec3("viewPos", camera.Position);
-        lightingShader.setVec3("lightPos", directionalLight.position);
+
 
         for (int i = 0; i < cubes.size(); i++)
         {
