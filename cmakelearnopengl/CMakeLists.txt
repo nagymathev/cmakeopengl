@@ -17,11 +17,19 @@ configure_file(asset_locations.h.in asset_locations.h)
 #configure_file(assets/basic.vert assets/basic.vert COPYONLY)
 #configure_file(assets/basic.frag assets/basic.frag COPYONLY)
 
+include(FetchContent)
+FetchContent_Declare(
+        glfw
+        GIT_REPOSITORY https://github.com/glfw/glfw.git
+        GIT_TAG 3.3.8
+)
+FetchContent_MakeAvailable(glfw)
+
 # TODO: Add tests and install targets if needed.
 target_include_directories(learnopengl PUBLIC "../include" "${CMAKE_BINARY_DIR}/cmakelearnopengl")
-target_link_directories(learnopengl PUBLIC "../lib")
+#target_link_directories(learnopengl PUBLIC "../lib")
 
-target_link_libraries(learnopengl PUBLIC glfw3)
+target_link_libraries(learnopengl PUBLIC glfw)
 if (${UNIX})
   target_link_libraries(learnopengl PUBLIC GL wayland-client)
 endif ()
